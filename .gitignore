@@ -1,0 +1,8 @@
+.vscode
+build
+node_modules
+src/cparser.c
+src/cparser.h
+src/cconsts.h
+libllredis.a
+llredis

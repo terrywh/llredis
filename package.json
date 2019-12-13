@@ -1,0 +1,19 @@
+{
+  "name": "llredis",
+  "version": "0.1.0",
+  "description": "redis protocol parser with llparse",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "redis",
+    "parser",
+    "protocol"
+  ],
+  "author": "terrywh",
+  "license": "MIT",
+  "dependencies": {
+    "llparse": "^6.2.0"
+  }
+}
