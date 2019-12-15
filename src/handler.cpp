@@ -12,15 +12,14 @@ extern "C" {
 
         return 0;
     }
-
     // 错误信息（简单字符串）
     int llredis__on_error(
         llredis_t* s, const unsigned char* p,
         const unsigned char* endp) {
     
-        std::cout << "error: ["
+        std::cout << "error: "
             << std::string_view(reinterpret_cast<const char*>(p), endp - p)
-            << "]" << std::endl;
+            << " (" << (s->size == LLREDIS_UNKNOWN_SIZE) << ")" << std::endl;
         return 0;
     }
     // 简单字符串
@@ -28,12 +27,12 @@ extern "C" {
         llredis_t* s, const unsigned char* p,
         const unsigned char* endp) {
 
-        std::cout << "string: ["
+        std::cout << "string: "
             << std::string_view(reinterpret_cast<const char*>(p), endp - p)
-            << "]" << std::endl;
+            << " (" << (s->size == LLREDIS_UNKNOWN_SIZE) << ")" << std::endl;
         return 0;
     }
-     // 负数（符号）
+    // 负数（符号）
     int llredis__on_integer_m(
         llredis_t* s, const unsigned char* p,
         const unsigned char* endp) {
@@ -64,7 +63,7 @@ extern "C" {
 
         std::cout << "bulk_string: "
             << std::string_view(reinterpret_cast<const char*>(p), endp - p)
-            << std::endl;
+            << " (" << (s->size == LLREDIS_UNKNOWN_SIZE) << ")" <<std::endl;
         return 0;
     }
     // 数组成员数量

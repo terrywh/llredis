@@ -26,7 +26,11 @@ int main(int argc, char* argv[]) {
     err = llredis_execute(&parser, str.c_str(), str.c_str() + str.size());
     error_assert(err, &parser);
 
-    str.assign("-abc\r\n");
+    str.assign("-ab");
+    err = llredis_execute(&parser, str.c_str(), str.c_str() + str.size());
+    error_assert(err, &parser);
+
+    str.assign("c\r\n");
     err = llredis_execute(&parser, str.c_str(), str.c_str() + str.size());
     error_assert(err, &parser);
 

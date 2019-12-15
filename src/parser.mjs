@@ -18,6 +18,13 @@ export const VALUE_TYPES = {
     "BULK_STRING": '$',
     "ARRAY": '*',
 };
+export const VALUE_CODES = {
+    "ERROR": '-'.charCodeAt(0),
+    "SIMPLE_STRING": '+'.charCodeAt(0),
+    "INTEGER": ':'.charCodeAt(0),
+    "BULK_STRING": '$'.charCodeAt(0),
+    "ARRAY": '*'.charCodeAt(0),
+};
 // 
 const NUMBER_MAPPING = Object.fromEntries([
     "0", "1", "2", "3", "4",
@@ -31,18 +38,24 @@ function E(name, where) {
     if(ERRORS[name]) return parser.error(ERRORS[name], name + " @" + where);
     else throw new Error("undefined error '" + name + "'");
 }
+// 用于存储当前类型（不支持多层组合）
+parser.property("i8", "type");
 // 用于存储部分 整数、长度 信息；
 parser.property("i64", "size");
 
-const    before_type      = parser.node("before_type");
-const     reset_size      = parser.invoke(parser.code.update("size", 0));
+const  before_type       = parser.node("before_type");
+const   reset_size       = parser.invoke(parser.code.update("size", 0));
 const           type_span = parser.span(parser.code.span("llredis__on_type"));
-const        on_type      = parser.node("on_type");
+const      on_type       = parser.node("on_type");
 // 简单字符串
+const   before_error      = parser.invoke(parser.code.update("size", -1)); // 开始：未知长度
 const          error_span = parser.span(parser.code.span("llredis__on_error"));
 const       on_error      = parser.node("on_error");
-const    simple_string_span = parser.span(parser.code.span("llredis__on_simple_string"));
-const on_simple_string      = parser.node("on_simple_string");
+const    after_error      = parser.invoke(parser.code.update("size", 0)); // 结束
+const before_simple_string      = parser.invoke(parser.code.update("size", -1)); // 开始：未知长度
+const        simple_string_span = parser.span(parser.code.span("llredis__on_simple_string"));
+const     on_simple_string      = parser.node("on_simple_string");
+const  after_simple_string      = parser.invoke(parser.code.update("size", 0)); // 结束
 // 整数
 const     on_integer      = parser.node("on_integer");
 const   calc_integer_p    = parser.invoke(
@@ -83,19 +96,28 @@ before_type
 reset_size
     .otherwise(type_span.start(on_type));
 on_type
-    .match('-', type_span.end(error_span.start(on_error)))
-    .match('+', type_span.end(simple_string_span.start(on_simple_string)))
+    .match('-', type_span.end(before_error))
+    .match('+', type_span.end(before_simple_string))
     .match(':', type_span.end(on_integer))
     .match('$', type_span.end(on_bulk_string_size))
     .match('*', type_span.end(on_array_size))
     .otherwise(E("ERROR_UNKNOWN_TYPE", "on_type"));
-on_error
-    .peek('\r', error_span.end(before_type)) // "\r\n" -> before_type
-    .skipTo(on_error);
 
+before_error
+    .otherwise(error_span.start(on_error))
+on_error
+    .peek('\r', after_error) // "\r\n" -> before_type
+    .skipTo(on_error);
+after_error
+    .otherwise(error_span.end(before_type));
+
+before_simple_string
+    .otherwise(simple_string_span.start(on_simple_string))
 on_simple_string
-    .peek('\r', simple_string_span.end(before_type)) // "\r\n" -> before_type
+    .peek('\r', after_simple_string) // "\r\n" -> before_type
     .skipTo(on_simple_string)
+after_simple_string
+    .otherwise(simple_string_span.end(before_type))
 
 on_integer
     .match("+", on_integer)

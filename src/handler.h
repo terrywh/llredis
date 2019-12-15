@@ -2,7 +2,7 @@
 #include "cparser.h"
 
 extern "C" {
-    // 类型回调 (新数据开始)
+    // 类型：新数据项开始
     int llredis__on_type(
         llredis_t* s, const unsigned char* p,
         const unsigned char* endp);

@@ -7,14 +7,14 @@ const __dirname  = dirname(fileURLToPath(import.meta.url));
 import parser, {begin_node, ERRORS, VALUE_TYPES} from './parser.mjs';
 
 async function constant_header() {
-    let header = "#ifndef LLREDIS__INTERNAL_CONSTANT_H\n#define LLREDIS__INTERNAL_CONSTANT_H\n\n#include <cstdint>\n\n";
-    header += "namespace llparse::redis {\n";
+    let header = "#ifndef LLREDIS__CONSTANT_H\n#define LLREDIS__CONSTANT_H\n\n#include <cstdint>\n";
+
     // 错误号
-    header += "\n\tenum error_value_t: std::uint8_t {\n";
+    header += "\nenum llredis_error_value_t: std::uint8_t {\n";
     for(let key in ERRORS) {
-        header += "\t\t" + ("ERROR_" + key).padEnd(16) + " = " + ERRORS[key] + ",\n";
+        header += "\t" + ("ERROR_" + key).padEnd(16) + " = " + ERRORS[key] + ",\n";
     }
-    header += "\t};\n"
+    header += "};\n"
     
     // 错误文本
     // header += "\n\const char* error_s[] = {\n";
@@ -23,13 +23,15 @@ async function constant_header() {
     // }
     // header += "\t};\n"
     // 类型定义
-    header += "\n\tenum value_type_t: std::uint8_t {\n";
+    header += "\nenum llredis_value_type_t: std::uint8_t {\n";
     for(let key in VALUE_TYPES) {
-        header += "\t\t" + ("VALUE_TYPE_" + key).padEnd(16) + " = '" + VALUE_TYPES[key] + "',\n";
+        header += "\t" + ("VALUE_TYPE_" + key).padEnd(16) + " = '" + VALUE_TYPES[key] + "',\n";
     }
-    header += "\t};\n";
-    
-    header += "}\n#endif // LLREDIS__INTERNAL_CONSTANT_H\n";
+    header += "};\n";
+    // 未知长度大小（匹配结束符）
+    header += "\nconst std::uint64_t LLREDIS_UNKNOWN_SIZE = -1;\n";
+   
+    header += "\n#endif // LLREDIS__CONSTANT_H\n";
     await fs.writeFile(__dirname + "/cconsts.h", header);
 }
 
