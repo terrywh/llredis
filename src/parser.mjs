@@ -44,9 +44,12 @@ parser.property("i8", "type");
 parser.property("i64", "size");
 
 const  before_type       = parser.node("before_type");
+const   reset_type       = parser.invoke(parser.code.update("type", 0));
 const   reset_size       = parser.invoke(parser.code.update("size", 0));
-const           type_span = parser.span(parser.code.span("llredis__on_type"));
+const         type_span  = parser.span(parser.code.span("llredis__on_type"));
 const      on_type       = parser.node("on_type");
+// const   store_type       = parser.node(parser.code.value("llredis__on_type"));
+
 // 简单字符串
 const   before_error      = parser.invoke(parser.code.update("size", -1)); // 开始：未知长度
 const          error_span = parser.span(parser.code.span("llredis__on_error"));
@@ -94,6 +97,8 @@ before_type
     .match('\n', before_type)
     .otherwise(reset_size);
 reset_size
+    .otherwise(reset_type);
+reset_type
     .otherwise(type_span.start(on_type));
 on_type
     .match('-', type_span.end(before_error))
@@ -102,7 +107,7 @@ on_type
     .match('$', type_span.end(on_bulk_string_size))
     .match('*', type_span.end(on_array_size))
     .otherwise(E("ERROR_UNKNOWN_TYPE", "on_type"));
-
+    
 before_error
     .otherwise(error_span.start(on_error))
 on_error

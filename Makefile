@@ -1,3 +1,5 @@
+# 安装
+PREFIX=/data/vendor/llredis-0.1.0
 # 编译环境
 NODE=/data/server/node/bin/node
 CXX?=clang++
@@ -15,24 +17,21 @@ clean:
 	rm -rf build/* libllredis.a llredis
 	rm -rf src/cparser.c src/cconsts.h src/cparser.h 
 
-libllredis.a: ./build/cparser.o ./build/handler.o
-	${AR} rcs $@ $^ 
-
-./build/cparser.o: ./src/cparser.c ./src/cparser.h
-	${CC} ${CFLAGS} -c $< -o $@
-
-./build/handler.o: ./src/handler.cpp ./src/handler.h ./src/cconsts.h ./src/cparser.h 
-	${CXX} ${CXXFLAGS} -c $< -o $@
+HEADERS_FILES = src/builder.hpp src/cconsts.h \
+ src/cparser.c src/cparser.h src/handler.hpp \
+ src/parser.hpp src/value_type.hpp
 
 ./src/cconsts.h: ./src/builder.mjs ./src/parser.mjs
 	${NODE} --experimental-modules ./src/builder.mjs
-./src/cparser.h: ./src/builder.mjs ./src/parser.mjs
-	${NODE} --experimental-modules ./src/builder.mjs
-./src/cparser.c: ./src/builder.mjs ./src/parser.mjs
-	${NODE} --experimental-modules ./src/builder.mjs
+# ./src/cparser.h: ./src/builder.mjs ./src/parser.mjs
+# 	${NODE} --experimental-modules ./src/builder.mjs
+# ./src/cparser.c: ./src/builder.mjs ./src/parser.mjs
+# 	${NODE} --experimental-modules ./src/builder.mjs
 
-llredis: libllredis.a
-llredis: ./build/test/main.o
+./build/cparser.o: ./src/cparser.c
+	${CC} ${CFLAGS} -c $< -o $@
+
+llredis: ./build/test/main.o ./build/cparser.o
 	${CXX} $^ -o $@
 
 ./build/test:
@@ -41,5 +40,15 @@ llredis: ./build/test/main.o
 ./build/redis:
 	mkdir -p build/redis
 
-./build/test/main.o: ./test/main.cpp ./src/cparser.h ./src/cconsts.h ./build/test
+./build/test/main.o: ./test/main.cpp ${HEADERS_FILES} ./build/test
 	${CXX} ${CXXFLAGS} -c $< -o $@
+
+install:
+	mkdir -p ${PREFIX}/include
+	cp builder.hpp ${PREFIX}/include
+	cp cconsts.h   ${PREFIX}/include
+	cp cparser.h   ${PREFIX}/include
+	cp handler.hpp ${PREFIX}/include
+	cp parser.hpp  ${PREFIX}/include
+	cp value_type.hpp ${PREFIX}/include
+	cp lllredis.hpp ${PREFIX}/include
